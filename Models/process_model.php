@@ -159,7 +159,21 @@ function get_process_list()
     1
   );
 
+  $list[20] = array(
+    _("signed to unsigned"),
+    0,
+    "signed_to_unsigned",
+    0,
+    0
+  );
 
+  $list[21] = array(
+    _("Combine to long"),
+    1,
+    "combine_to_long",
+    0,
+    0
+  );
 
 
   return $list;
@@ -690,5 +704,55 @@ function average($feedid, $time_now, $value)
   }
   }
 
+
+function signed_to_unsigned($arg, $time, $value)
+{
+  if ($value < 0) {
+    return ($value + 65536) / 10;
+  }
+  else {
+    return $value / 10;
+  }
+}
+
+
+function combine_to_long($id, $time, $value)
+{
+  // Note: This process should ONLY be applied to the most significant word in a long
+  if ($value < 0) {
+    $value_msword = ($value + 65536) * 65536;
+  }
+  else {
+    $value_msword = $value * 65536;
+  }
+  // Most significant word now ready. Add least significant word
+
+  $result = db_query("SELECT value FROM input WHERE id = '$id'");
+  $row = db_fetch_array($result);
+  $value_lsword = $row['value'];
+
+  //  return $value_lsword;
+  if ($value_lsword < 0) {
+#    $value = ($value_lsword + 65536) * 0.10 + $value_msword;
+    $value = ($value_lsword + 65536) + $value_msword;
+  }
+  else {
+#    $value = $value_lsword * 0.10 + $value_msword;
+    $value = $value_lsword + $value_msword;
+  }
+
+  return $value;
+
+/*
+  $value = $value * $row['value'];
+function times_input($id, $time, $value)
+{
+  $result = db_query("SELECT value FROM input WHERE id = '$id'");
+  $row = db_fetch_array($result);
+  $value = $value * $row['value'];
+  return $value;
+}
+*/
+}
 
 ?>
